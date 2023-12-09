@@ -1,5 +1,7 @@
 const buyerSchema = require('../Schema/BuyerSchema');
 const vehicleSchema = require('../Schema/VehicleSchema');
+const stationSchema = require('../Schema/stationSchema');
+
 const bcrypt = require('bcrypt');
 
 const buyerController = {
@@ -139,6 +141,17 @@ const buyerController = {
           return res.status(500).json({ error: error.message });
       }
   },
+  async getAllStations(req, res) {
+    try {
+        const sations = await stationSchema.find();
+        return res.status(200).json({Stations : sations});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: error.message });
+    }
+},
+
+
     
     
 }

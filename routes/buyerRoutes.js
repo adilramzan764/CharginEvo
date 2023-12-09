@@ -17,6 +17,8 @@ router.post('/buyerSignUp',Controllers.buyerSignUp)
 router.post('/buyerVehicleAdd',Controllers.buyerVehicleAdd)
 //buyerchangePassword
 router.post('/buyerchangePassword',Controllers.buyerchangePassword)
+//getAllStations
+router.get('/getAllStations',Controllers.getAllStations)
 
 
 
