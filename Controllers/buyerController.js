@@ -14,7 +14,7 @@ const buyerController = {
           
             const buyer = await buyerSchema.findOne({ email });
             if (!buyer) {
-              return res.status(404).json({ error: 'Patent not found' });
+              return res.status(404).json({ error: 'User not found' });
             }
 
             if (buyer.password !== password) {

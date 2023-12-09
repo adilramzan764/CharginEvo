@@ -1,32 +1,5 @@
 const mongoose = require('mongoose');
-
 const { Schema } = mongoose;
-
-const stationSchema = new Schema({   
-   serviceHours: {
-       required: true,
-       type: String
-   },
-   numberOfChargingSpots: {
-       required: true,
-       type: String
-   },
-   perHourPrice: {
-    required: true,
-    type: String,
-   },
-   ParkingPrice: {
-    required: false,
-    type: String,
-   },
-   amenities: {
-    required: true,
-    type: [String]
-  }, 
-
-}, {
-   timestamps: true
-});
 
 const sellerSchema = new Schema({   
     firstName: {
@@ -55,9 +28,10 @@ const sellerSchema = new Schema({
         type: String
     },
 
-    stationSchema:{
+    station:{
         required : false,
-        type:stationSchema
+        type: Schema.Types.ObjectId,
+        ref: 'Station' 
     },
     token: {
         type: String,

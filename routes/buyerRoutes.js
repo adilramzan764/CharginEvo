@@ -1,7 +1,6 @@
 const express= require('express');
 const Controllers = require('../Controllers/buyerController');
 const Mailer = require('../Utils/Mailer');
-
 const router=express.Router();
 
 
