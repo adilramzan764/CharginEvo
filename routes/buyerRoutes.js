@@ -1,7 +1,6 @@
 const express= require('express');
 const Controllers = require('../Controllers/buyerController');
 const Mailer = require('../Utils/Mailer');
-
 const router=express.Router();
 
 
@@ -18,6 +17,8 @@ router.post('/buyerSignUp',Controllers.buyerSignUp)
 router.post('/buyerVehicleAdd',Controllers.buyerVehicleAdd)
 //buyerchangePassword
 router.post('/buyerchangePassword',Controllers.buyerchangePassword)
+//getAllStations
+router.get('/getAllStations',Controllers.getAllStations)
 
 
 

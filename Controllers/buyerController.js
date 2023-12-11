@@ -1,5 +1,7 @@
 const buyerSchema = require('../Schema/BuyerSchema');
 const vehicleSchema = require('../Schema/VehicleSchema');
+const stationSchema = require('../Schema/stationSchema');
+
 const bcrypt = require('bcrypt');
 
 const buyerController = {
@@ -14,7 +16,7 @@ const buyerController = {
           
             const buyer = await buyerSchema.findOne({ email });
             if (!buyer) {
-              return res.status(404).json({ error: 'Patent not found' });
+              return res.status(404).json({ error: 'User not found' });
             }
 
             if (buyer.password !== password) {
@@ -139,6 +141,17 @@ const buyerController = {
           return res.status(500).json({ error: error.message });
       }
   },
+  async getAllStations(req, res) {
+    try {
+        const sations = await stationSchema.find();
+        return res.status(200).json({Stations : sations});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: error.message });
+    }
+},
+
+
     
     
 }

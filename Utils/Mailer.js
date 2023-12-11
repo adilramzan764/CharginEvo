@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const buyerSchema = require('../Schema/BuyerSchema');
 
 const sendMail = {
     async sendCodeToEmail(req, res) {
@@ -13,6 +14,11 @@ const sendMail = {
               });
             const email = req.params.email;
             const code = req.params.code;
+            const buyer = await buyerSchema.findOne({ email });
+            if (buyer) {
+                return res.status(404).json({ error: 'User Already Exists' });
+              }
+
             // const code = Math.floor(1000 + Math.random() * 9000);
             const mailOptions = {
                 from: 'inzmamkhan56@gmail.com',
