@@ -46,11 +46,16 @@ const sellerController = {
         console.log("somgthign")
         try {
             const { firstname, lastname, email, password, phone } = req.body;
+            console.log(req.body)
     
             // Check if any required fields are empty
             if (!firstname || !lastname || !email || !password || !phone) {
+                console.log(firstname)
+                console.log('Please fill in all required fields')
                 return res.status(400).json({ message: 'Please fill in all required fields' });
             }
+            console.log(firstname)
+
             console.log(req.file)
             if (!req.file) {
                 console.log(3);
