@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const { Schema } = mongoose;
 
 const stationSchema = new Schema({   
@@ -15,6 +14,10 @@ const stationSchema = new Schema({
      required: true,
      type: [String]
    }, 
+   chargingSpots: [{
+    type: Schema.Types.ObjectId,
+    ref: 'ChargingSpot',
+  }],
     perHourPrice: {
      required: true,
      type: String,
@@ -38,4 +41,23 @@ const stationSchema = new Schema({
  });
 
 
- module.exports = mongoose.model('Sation', stationSchema); // Use 'Sation' instead of 'sellerSchema'
+
+ 
+const chargingSpotSchema = new Schema({
+  station: {
+    type: Schema.Types.ObjectId,
+    ref: 'Station',
+    required: true,
+  },
+  spotNumber: {
+    type: Number,
+    required: true,
+  },
+  isBooked: {
+    type: Boolean,
+    default: false,
+  },
+}, { timestamps: true });
+
+
+ module.exports = mongoose.model('Sation', stationSchema); 

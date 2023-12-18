@@ -73,6 +73,50 @@ const buyerController = {
             res.status(500).json({ message: error.message });
         }
     },
+    async getBuyerInfo(req, res) {
+        try {
+            const buyerId = req.params.buyerId;
+            const userExists = await buyerSchema.findById(buyerId);
+            if (!userExists) {
+                return res.status(404).json({ message: "Buyer not found" });
+            }
+            return res.status(200).json({userExists});
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
+    async buyerInfoUpdate(req, res) {
+        try {
+            const { userId, firstName, lastName, email, password, phone } = req.body;
+            
+            if (!userId) {
+                return res.status(400).json({ error: 'userId is missing' });
+            }
+    
+            const user = await buyerSchema.findById(userId);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+    
+            const updateFields = {};
+            if (firstName) updateFields.firstName = firstName;
+            if (lastName) updateFields.lastName = lastName;
+            if (email) updateFields.email = email;
+            if (password) updateFields.password = password;
+            if (phone) updateFields.phone = phone;    
+     
+    
+            await buyerSchema.findByIdAndUpdate(userId, { $set: updateFields });
+    
+            res.status(200).json({ message: 'User Info Updated successfully' });
+    
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Error updating user info' });
+        }
+    },
+    
     async buyerchangePassword(req, res) {
       try {
           const { userId, newPassword } = req.body;
