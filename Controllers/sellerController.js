@@ -6,6 +6,7 @@ const connectionString = 'DefaultEndpointsProtocol=https;AccountName=chargingdat
 const containerName = 'sellerdata'; // Replace with your desired container name
 const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerClient = blobServiceClient.getContainerClient(containerName);
+const bcrypt = require('bcrypt');
 
 
 
@@ -121,6 +122,8 @@ const sellerController = {
                 ParkingPrice,
                 amenities,
             });
+
+
     
             const savedStation = await station.save(); // Save the station
 
@@ -136,6 +139,69 @@ const sellerController = {
             res.status(500).json({ message: error.message });
         }
     },
+    async sellerchangePassword(req, res) {
+        try {
+            const { userId, newPassword } = req.body;
+            console.log( req.body);
+    
+            if (!userId || !newPassword) {
+                return res.status(400).json({ error: 'Required fields are missing' });
+            }
+    
+            const user = await sellerSchema.findById(userId);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+    
+            // Hash the new password before saving it
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            user.password = hashedPassword;
+            await user.save();
+    
+            return res.status(200).json({ message: 'Password changed successfully' });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Error changing password' });
+        }
+    },
+    async sellerInfoUpdate(req, res) {
+        try {
+            const { userId, firstName, lastName, email, password, phone } = req.body;
+            
+            if (!userId) {
+                return res.status(400).json({ error: 'userId is missing' });
+            }
+    
+            const user = await sellerSchema.findById(userId);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+    
+            const updateFields = {};
+            if (firstName) updateFields.firstName = firstName;
+            if (lastName) updateFields.lastName = lastName;
+            if (email) updateFields.email = email;
+            if (password) updateFields.password = password;
+            if (phone) updateFields.phone = phone;
+    
+            // Handle profile image separately if it's provided in the request
+            if (req.file) {
+                const profileImage = req.file;
+                // Code for handling profile image upload and URL generation
+    
+                updateFields.profileImage = profileImageBlockBlobClient.url; // Store the image URL
+            }
+    
+            await sellerSchema.findByIdAndUpdate(userId, { $set: updateFields });
+    
+            res.status(200).json({ message: 'User Info Updated successfully' });
+    
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Error updating user info' });
+        }
+    },
+    
     async addLocationToStation(req, res) {
         console.log("station");
         try {

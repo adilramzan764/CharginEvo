@@ -20,6 +20,10 @@ router.post('/sellerSignUpStation', Controllers.sellerSignUpStation)
 router.get('/getSellerInfo/:sellerid', Controllers.getSellerInfo)
 //addLocationToStation
 router.post('/addLocationToStation', Controllers.addLocationToStation)
+//sellerchangePassword
+router.post('/sellerchangePassword', Controllers.sellerchangePassword)
+//sellerInfoUpdate
+router.post('/sellerInfoUpdate', Controllers.sellerInfoUpdate)
 
 
 

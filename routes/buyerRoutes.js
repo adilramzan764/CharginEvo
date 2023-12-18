@@ -19,6 +19,10 @@ router.post('/buyerVehicleAdd',Controllers.buyerVehicleAdd)
 router.post('/buyerchangePassword',Controllers.buyerchangePassword)
 //getAllStations
 router.get('/getAllStations',Controllers.getAllStations)
+//getBuyerInfo
+router.get('/getBuyerInfo/:buyerId',Controllers.getBuyerInfo)
+//buyerInfoUpdate
+router.patch('/buyerInfoUpdate',Controllers.buyerInfoUpdate)
 
 
 
