@@ -43,21 +43,9 @@ const stationSchema = new Schema({
 
 
  
-const chargingSpotSchema = new Schema({
-  station: {
-    type: Schema.Types.ObjectId,
-    ref: 'Station',
-    required: true,
-  },
-  spotNumber: {
-    type: Number,
-    required: true,
-  },
-  isBooked: {
-    type: Boolean,
-    default: false,
-  },
-}, { timestamps: true });
 
 
- module.exports = mongoose.model('Sation', stationSchema); 
+
+ module.exports = mongoose.model('Sation', stationSchema); // Use 'Sation' instead of 'sellerSchema'
+
+

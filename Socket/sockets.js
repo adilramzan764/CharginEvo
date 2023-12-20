@@ -1,4 +1,5 @@
 const { Server } = require("socket.io");
+const   { bookingInfoSchema, chargingSpotSchema } = require('../Schema/ChargingSpotSchema')
 
 
 
@@ -20,40 +21,58 @@ module.exports = function attachSocket(httpServer) {
   
     socket.on('bookings', async (bookingsData) => {
       try {
-        console.log(bookingsData);
-        const { doctorId, patientName, diagnosis, patientId, RequestType, fees, time, date,hospitableName} = bookingsData;
-    
-        const doctor = await doctorSchema.findById(doctorId);
-        const patient = await patientSchema.findById(patientId);    
-        if (!doctor) {          
-          socket.emit('bookingError', { message: "Doctor not found" });
-          return;
+        const { spotId, startedAt, duration, units, station, chargingPrice, parkingPrice, buyer } = bookingsData;
+           if (!startedAt || !duration || !units || !station || !chargingPrice || !parkingPrice || !buyer || !spotId )  {
+            // socket.emit('bookingError', { message: "Required Fields are not given" });
+            io.emit(station, { message: "Required Fields are not given" });
+            console.log("Required Fields are not given")
         }
-    
-        const request = new Requests({
-          doctorId: doctorId,
-          doctorName: doctor.name,
-          doctorImage: doctor.profileImage,
-          patientPhone:patient.name,
-          patientEmail:patient.email,
-          doctorSpecialization:  doctor.specialization,
-          hospitableName:hospitableName,
-          patientName: patientName,
-          diagnosis: diagnosis,
-          patientId: patientId, 
-          RequestType: RequestType,
-          fees: fees,
-          time: time,
-          date: date,
-        });
-    
-        await request.save();    
-        console.log('Request saved:', request);
-        io.emit(doctorId, request);
-      } catch (error) {
-        console.error('Error processing booking:', error);
        
-      }
+        const spotExists = await chargingSpotSchema.findById(spotId);
+        console.log("here is station id:" , station);
+
+        if (!spotExists) {
+          io.emit(station, { message: "Spot not found" });
+        }
+
+
+       
+        // Check if the spot is available at the specified start time
+        const overlappingBooking = spotExists.bookingInfo.find(booking => {
+            const existingStart = new Date(booking.startedAt).getTime();
+            const newStart = new Date(startedAt).getTime();
+            const existingEnd = existingStart + (parseInt(booking.duration) * 60 * 60 * 1000);
+            const durationInHours = parseInt(duration);
+            const newEnd = newStart + (durationInHours * 60 * 60 * 1000); // Calculate the end time based on the provided duration in hours
+
+            return (
+                (newStart >= existingStart && newStart < existingEnd) ||
+                (newEnd > existingStart && newEnd <= existingEnd) ||
+                (newStart <= existingStart && newEnd >= existingEnd)
+            );
+        });
+
+        if (overlappingBooking) {
+          io.emit(station, { message: "Spot already booked for the specified time" });
+        }
+
+        const newBooking = new bookingInfoSchema({
+            startedAt: startedAt,
+            duration: duration,
+            units: units,
+            buyer: buyer,
+            station: station,
+            chargingPrice: chargingPrice,
+            parkingPrice: parkingPrice
+        });
+        await newBooking.save();
+        spotExists.bookingInfo.push(newBooking);
+        await spotExists.save();
+        io.emit(station, { message: "Booking information added successfully", spotExists });
+    } catch (error) {
+        console.log(error);
+        io.emit(station, {  error: error.message });
+    }
     });   
 
   
