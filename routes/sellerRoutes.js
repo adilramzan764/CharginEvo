@@ -23,7 +23,18 @@ router.post('/addLocationToStation', Controllers.addLocationToStation)
 //sellerchangePassword
 router.post('/sellerchangePassword', Controllers.sellerchangePassword)
 //sellerInfoUpdate
+// <<<<<<< main
 router.post('/sellerInfoUpdate',upload.single('profileImage') ,Controllers.sellerInfoUpdate)
+
+router.post('/sellerInfoUpdate', Controllers.sellerInfoUpdate)
+//getSellerStationSpots
+router.get('/getSellerStationSpots/:sellerid', Controllers.getSellerStationSpots)
+//bookInStation
+router.post('/bookInStation/:spotId', Controllers.bookInStation)
+//getOrdersById
+router.get('/getOrdersById/:stationId', Controllers.getOrdersById)
+
+// >>>>>>> main
 
 
 

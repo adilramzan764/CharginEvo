@@ -2,13 +2,12 @@ const sellerSchema = require('../Schema/SellerScehma');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const { v4: uuidv4 } = require('uuid');
 const StationSchema = require('../Schema/stationSchema');
+const   { bookingInfoSchema, chargingSpotSchema } = require('../Schema/ChargingSpotSchema')
 const connectionString = 'DefaultEndpointsProtocol=https;AccountName=chargingdata;AccountKey=bMDS4ZcMoJNwIFxBvrA2K8U3PwUghSmNKkdSTL+9p55l7YWBmjZc5xKpUt5Y1RwiqiTGjqPMxBPG+AStTqILHA==;EndpointSuffix=core.windows.net'; // Replace with your actual connection string
 const containerName = 'sellerdata'; // Replace with your desired container name
 const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 const bcrypt = require('bcrypt');
-
-
 
 const sellerController = {
     async sellerlogin(req, res) {
@@ -93,25 +92,17 @@ const sellerController = {
         }
     },
     async sellerSignUpStation(req, res) {
-        console.log("station");
         try {
             const { userId, serviceHours, numberOfChargingSpots, perHourPrice, ParkingPrice, amenities, namesOfChargingSpots } = req.body;
     
-            // Check if any required fields are empty
-            if (!userId || !serviceHours || !numberOfChargingSpots || !perHourPrice  || !amenities || !namesOfChargingSpots) {
+            if (!userId || !serviceHours || !numberOfChargingSpots || !perHourPrice || !amenities || !namesOfChargingSpots) {
                 return res.status(400).json({ message: 'Please fill in all required fields' });
             }
     
-            // Check if userId is provided
-            if (!userId) {
-                return res.status(400).json({ error: 'User Id is not provided' });
-            }
-    
-            const userExists = await sellerSchema.findById(userId); // Find the user by ID
+            const userExists = await sellerSchema.findById(userId);
             if (!userExists) {
                 return res.status(404).json({ message: "User not found" });
             }
-    
             const station = new StationSchema({
                 serviceHours,
                 numberOfChargingSpots,
@@ -120,23 +111,240 @@ const sellerController = {
                 ParkingPrice,
                 amenities,
             });
-
-
+            const savedStation = await station.save();
     
-            const savedStation = await station.save(); // Save the station
-
             // Associate the station with the user and save the user
             userExists.station = savedStation._id;
-            await userExists.save(); // Save the user with the associated station ID
+            await userExists.save();
+            const numberOfSpots = parseInt(numberOfChargingSpots);
     
-            res.status(200).json({ message: 'Station created and associated with the user successfully', savedStation });
+            const chargingSpots = [];
+    
+            for (let i = 0; i < numberOfSpots; i++) {
+                const spot = new chargingSpotSchema({
+                    spotName: namesOfChargingSpots[i],
+                    spotNumber: i + 1,
+                    station: savedStation._id
+                });
+                chargingSpots.push(spot);
+            }
+    
+            const savedSpots = await chargingSpotSchema.insertMany(chargingSpots);
+    
+            // If you need to associate spots with a station, you would create the station here and associate the spots with it
+            // const station = new Station({
+            //     serviceHours,
+            //     numberOfChargingSpots,
+            //     namesOfChargingSpots,
+            //     perHourPrice,
+            //     ParkingPrice,
+            //     amenities,
+            //     chargingSpots: savedSpots.map(spot => spot._id) // Associate spots with the station
+            // });
+            // const savedStation = await station.save();    
+            // Associate the station with the user and save the user
+            // userExists.station = savedStation._id;
+            // await userExists.save();
+    
+            res.status(200).json({ message: 'Station created and associated with the user successfully', chargingSpots: savedSpots });
         } catch (error) {
             console.error(error.message);
-            console.error("there is the seller");
-
             res.status(500).json({ message: error.message });
         }
     },
+    async getSellerStationSpots(req, res) {
+        try {
+            const sellerid = req.params.sellerid;
+            const userExists = await sellerSchema.findById(sellerid);
+            if (!userExists) {
+                return res.status(404).json({ message: "Seller not found" });
+            }
+            const stationId = userExists.station;
+            const spots = await chargingSpotSchema.find({station : stationId});
+
+            return res.status(200).json({spots});
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
+    // async bookInStation(req, res) {
+    //     try {
+    //         const spotId = req.params.spotId;
+    //         const spotExists = await chargingSpotSchema.findById(spotId);
+    
+    //         if (!spotExists) {
+    //             return res.status(400).json({ message: "Spot not found" });
+    //         }
+    
+    //         const { startedAt, duration, units  , station , chargingPrice,parkingPrice , buyer} = req.body;
+    
+    //         if (!startedAt || !duration || !units || !station || !chargingPrice || !parkingPrice || !buyer) {
+    //             return res.status(400).json({ message: "Required Fields are not given" });
+    //         }
+    
+    //         // Check if the spot is available at the specified start time
+    //         const overlappingBooking = spotExists.bookingInfo.find(booking => {
+    //             const existingStart = new Date(booking.startedAt).getTime();
+    //             const newStart = new Date(startedAt).getTime();
+    //             const existingEnd = existingStart + (parseInt(booking.duration) * 60 * 60 * 1000);
+    //             const durationInHours = parseInt(duration);
+    //             const newEnd = newStart + (durationInHours * 60 * 60 * 1000); // Calculate the end time based on the provided duration in hours
+    //                             return (
+    //                 (newStart >= existingStart && newStart < existingEnd) ||
+    //                 (newEnd > existingStart && newEnd <= existingEnd) ||
+    //                 (newStart <= existingStart && newEnd >= existingEnd)
+    //             );
+    //         });
+            
+    //         // const overlappingBooking = spotExists.bookingInfo.find(booking => {
+    //         //     const existingStart = new Date(booking.startedAt).getTime();
+    //         //     const newStart = new Date(startedAt).getTime();
+    //         //     const existingEnd = existingStart + (parseInt(booking.duration) * 60 * 60 * 1000);
+    //         //     const newEnd = newStart + (parseInt(duration) * 60 * 60 * 1000);
+    //         //     return (
+    //         //         (newStart >= existingStart && newStart < existingEnd) ||
+    //         //         (newEnd > existingStart && newEnd <= existingEnd) ||
+    //         //         (newStart <= existingStart && newEnd >= existingEnd)
+    //         //     );
+    //         // });
+    
+    //         if (overlappingBooking) {
+    //             return res.status(400).json({ message: "Spot already booked for the specified time" });
+    //         }
+    
+    //         const newBooking = new bookingInfoSchema({
+    //             startedAt: startedAt,
+    //             duration: duration,
+    //             units: units,
+    //             buyer: buyer,
+    //             station: station,
+    //             chargingPrice:chargingPrice,
+    //             parkingPrice: parkingPrice
+    //         });    
+    //         await newBooking.save();
+    //         spotExists.bookingInfo.push(newBooking);
+    //         await spotExists.save();    
+    //         return res.status(200).json({ message: "Booking information added successfully", spotExists });
+    //     } catch (error) {
+    //         console.log(error);
+    //         return res.status(500).json({ error: error.message });
+    //     }
+    // },
+
+    async bookInStation(req, res) {
+        try {
+            const spotId = req.params.spotId;
+            const spotExists = await chargingSpotSchema.findById(spotId);
+    
+            if (!spotExists) {
+                return res.status(400).json({ message: "Spot not found" });
+            }
+    
+            const { startedAt, duration, units, station, chargingPrice, parkingPrice, buyer } = req.body;
+    
+            if (!startedAt || !duration || !units || !station || !chargingPrice || !parkingPrice || !buyer) {
+                return res.status(400).json({ message: "Required Fields are not given" });
+            }
+    
+            // Check if the spot is available at the specified start time
+            const overlappingBooking = spotExists.bookingInfo.find(booking => {
+                const existingStart = new Date(booking.startedAt).getTime();
+                const newStart = new Date(startedAt).getTime();
+                const existingEnd = existingStart + (parseInt(booking.duration) * 60 * 60 * 1000);
+                const durationInHours = parseInt(duration);
+                const newEnd = newStart + (durationInHours * 60 * 60 * 1000); // Calculate the end time based on the provided duration in hours
+    
+                return (
+                    (newStart >= existingStart && newStart < existingEnd) ||
+                    (newEnd > existingStart && newEnd <= existingEnd) ||
+                    (newStart <= existingStart && newEnd >= existingEnd)
+                );
+            });
+    
+            if (overlappingBooking) {
+                return res.status(400).json({ message: "Spot already booked for the specified time" });
+            }
+    
+            const newBooking = new bookingInfoSchema({
+                startedAt: startedAt,
+                duration: duration,
+                units: units,
+                buyer: buyer,
+                station: station,
+                chargingPrice: chargingPrice,
+                parkingPrice: parkingPrice
+            });
+            await newBooking.save();
+            spotExists.bookingInfo.push(newBooking);
+            await spotExists.save();
+            return res.status(200).json({ message: "Booking information added successfully", spotExists });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
+
+    //get the pending orders by stationId order
+    async getOrdersById(req, res) {
+        try{
+            const stationId = req.params.stationId;
+            const orders = await bookingInfoSchema.find({
+                station: stationId,
+
+            });
+            if (!orders) {
+                return res.status(404).json({ message: "orders not found" });
+            }
+
+            return res.status(200).json({ orders });
+
+            
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
+    
+
+
+    
+    // async bookInStation(req, res) {
+    //     try {
+    //         const spotId = req.params.spotId;
+    //         console.log(spotId)
+    //         const spotExists = await chargingSpotSchema.findById(spotId);
+    
+    //         if (!spotExists) {
+    //             return res.status(400).json({ message: "Spot not found" });
+    //         }
+    
+    //         console.log(req.body);
+    //         const { startedAt, duration, units } = req.body;
+    
+    //         if (!startedAt || !duration || !units) {
+    //             return res.status(400).json({ message: "Required Fields are not given" });
+    //         }
+    
+    //         const newBooking = new bookingInfoSchema({
+    //             startedAt: startedAt,
+    //             duration: duration,
+    //             units: units,
+    //         });
+    
+    //         newBooking.save();
+    //         spotExists.bookingInfo.push(newBooking);
+    //         await spotExists.save();
+    
+    //         return res.status(200).json({ message: "Booking information added successfully", spotExists });
+    //     } catch (error) {
+    //         console.log(error);
+    //         return res.status(500).json({ error: error.message });
+    //     }
+    // },
+    
+    
     async sellerchangePassword(req, res) {
         try {
             const { userId, newPassword } = req.body;
@@ -243,7 +451,36 @@ const sellerController = {
   
     
     
+
+
+
+    
+    // Run the cleanup function periodically, for example, every hour
+    
 }
 
+
+    //testing purpose only to remove the spots which are completed or expire
+
+    async function removeExpiredBookings() {
+        try {
+            const currentTime = new Date();
+            const expiredBookings = await bookingInfoSchema.find({ startedAt: { $lt: currentTime } });
+    
+            for (const booking of expiredBookings) {
+                // Perform any necessary actions for the expired booking
+                // For example, remove the booking from the associated spot
+                await chargingSpotSchema.updateOne(
+                    { 'bookingInfo._id': booking._id },
+                    { $pull: { bookingInfo: { _id: booking._id } } }
+                );
+                // Or directly remove the booking from the bookingInfo collection
+                await bookingInfoSchema.deleteOne({ _id: booking._id });
+            }
+        } catch (error) {
+            console.error("Error removing expired bookings:", error);
+        }
+    }
+setInterval(removeExpiredBookings, 60 * 60 * 1000); // Run every hour
 
 module.exports = sellerController;
