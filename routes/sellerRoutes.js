@@ -23,7 +23,7 @@ router.post('/addLocationToStation', Controllers.addLocationToStation)
 //sellerchangePassword
 router.post('/sellerchangePassword', Controllers.sellerchangePassword)
 //sellerInfoUpdate
-router.post('/sellerInfoUpdate', Controllers.sellerInfoUpdate)
+router.post('/sellerInfoUpdate',upload.single('profileImage') ,Controllers.sellerInfoUpdate)
 
 
 
