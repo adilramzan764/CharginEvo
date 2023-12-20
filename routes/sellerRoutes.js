@@ -26,8 +26,8 @@ router.post('/sellerchangePassword', Controllers.sellerchangePassword)
 router.post('/sellerInfoUpdate', Controllers.sellerInfoUpdate)
 //getSellerStationSpots
 router.get('/getSellerStationSpots/:sellerid', Controllers.getSellerStationSpots)
-//bookInStation
-router.post('/bookInStation/:spotId', Controllers.bookInStation)
+// //bookInStation
+// router.post('/bookInStation/:spotId', Controllers.bookInStation)
 //getOrdersById
 router.get('/getOrdersById/:stationId', Controllers.getOrdersById)
 

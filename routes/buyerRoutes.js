@@ -23,6 +23,8 @@ router.get('/getAllStations',Controllers.getAllStations)
 router.get('/getBuyerInfo/:buyerId',Controllers.getBuyerInfo)
 //buyerInfoUpdate
 router.patch('/buyerInfoUpdate',Controllers.buyerInfoUpdate)
+//getBuyerOrdersById
+router.get('/getBuyerOrdersById/:userId', Controllers.getBuyerOrdersById)
 
 
 

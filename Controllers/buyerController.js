@@ -1,7 +1,7 @@
 const buyerSchema = require('../Schema/BuyerSchema');
 const vehicleSchema = require('../Schema/VehicleSchema');
 const stationSchema = require('../Schema/stationSchema');
-
+const   { bookingInfoSchema } = require('../Schema/ChargingSpotSchema')
 const bcrypt = require('bcrypt');
 
 const buyerController = {
@@ -36,7 +36,7 @@ const buyerController = {
 
           
           
-      },
+    },
       async buyerSignUp(req, res) {
         try {
             const { firstname, lastname, email, password, phone } = req.body;
@@ -116,7 +116,26 @@ const buyerController = {
             return res.status(500).json({ error: 'Error updating user info' });
         }
     },
-    
+    async getBuyerOrdersById(req, res) {
+        try{
+            const userId = req.params.userId;
+            const orders = await bookingInfoSchema.find({
+                buyer: userId,
+
+            });
+            if (!orders) {
+                return res.status(404).json({ message: "orders not found" });
+            }
+
+            return res.status(200).json({ orders });
+
+            
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
     async buyerchangePassword(req, res) {
       try {
           const { userId, newPassword } = req.body;

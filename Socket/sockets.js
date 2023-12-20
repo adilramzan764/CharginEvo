@@ -23,28 +23,23 @@ module.exports = function attachSocket(httpServer) {
       try {
         const { spotId, startedAt, duration, units, station, chargingPrice, parkingPrice, buyer } = bookingsData;
            if (!startedAt || !duration || !units || !station || !chargingPrice || !parkingPrice || !buyer || !spotId )  {
-            // socket.emit('bookingError', { message: "Required Fields are not given" });
             io.emit(station, { message: "Required Fields are not given" });
-            console.log("Required Fields are not given")
+            return; // Halt execution if spot is not found
+
         }
-       
         const spotExists = await chargingSpotSchema.findById(spotId);
         console.log("here is station id:" , station);
-
         if (!spotExists) {
           io.emit(station, { message: "Spot not found" });
+          return; // Halt execution if spot is not found
+
         }
-
-
-       
-        // Check if the spot is available at the specified start time
         const overlappingBooking = spotExists.bookingInfo.find(booking => {
             const existingStart = new Date(booking.startedAt).getTime();
             const newStart = new Date(startedAt).getTime();
             const existingEnd = existingStart + (parseInt(booking.duration) * 60 * 60 * 1000);
             const durationInHours = parseInt(duration);
             const newEnd = newStart + (durationInHours * 60 * 60 * 1000); // Calculate the end time based on the provided duration in hours
-
             return (
                 (newStart >= existingStart && newStart < existingEnd) ||
                 (newEnd > existingStart && newEnd <= existingEnd) ||
@@ -54,8 +49,11 @@ module.exports = function attachSocket(httpServer) {
 
         if (overlappingBooking) {
           io.emit(station, { message: "Spot already booked for the specified time" });
-        }
+          return; // Halt execution if spot is not found
 
+
+        }
+        console.log("Not booked")
         const newBooking = new bookingInfoSchema({
             startedAt: startedAt,
             duration: duration,
@@ -69,6 +67,8 @@ module.exports = function attachSocket(httpServer) {
         spotExists.bookingInfo.push(newBooking);
         await spotExists.save();
         io.emit(station, { message: "Booking information added successfully", spotExists });
+        return; // Halt execution if spot is not found
+
     } catch (error) {
         console.log(error);
         io.emit(station, {  error: error.message });
