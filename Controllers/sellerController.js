@@ -13,44 +13,46 @@ const sellerController = {
     async sellerlogin(req, res) {
         console.log("Seller Login");
         try {
-            const { email, password } = req.body;
-          
-            if (!email || !password) {
-              return res.status(400).json({ error: 'Required Fields are not given' });
-            }
-          
-            const seller = await sellerSchema.findOne({ email });
-            if (!seller) {
-              return res.status(404).json({ error: 'Seller not found' });
-            }
-
-            if (seller.password !== password) {
-              console.log("Invalid Password");
-              return res.status(401).json({ error: 'Invalid password' });
-            }
-          
-            console.log("Login Successful");
-                        
-            return res.status(200).json({ message: 'Login successful', id: seller._id });
-          } catch (error) {
-            console.error(error);
-            return res.status(500).json({ error:  error.message });
-          
-          
+          const { email, password } = req.body;
+      
+          if (!email || !password) {
+            return res.status(400).json({ error: 'Required Fields are not given' });
           }
-
-          
-          
+      
+          const seller = await sellerSchema.findOne({ email });
+          if (!seller) {
+            return res.status(404).json({ error: 'Seller not found' });
+          }
+      
+          // Compare hashed password
+          const isPasswordValid = await bcrypt.compare(password, seller.password);
+          if (!isPasswordValid) {
+            console.log("Invalid Password");
+            return res.status(401).json({ error: 'Invalid password' });
+          }
+      
+          console.log("Login Successful");
+      
+          return res.status(200).json({ message: 'Login successful', id: seller._id });
+        } catch (error) {
+          console.error(error);
+          return res.status(500).json({ error: error.message });
+        }
       },
     async sellerSignUpPersonal(req, res) {
         console.log("somgthign")
         try {
             const { firstname, lastname, email, password, phone } = req.body;
+            console.log(req.body)
     
             // Check if any required fields are empty
             if (!firstname || !lastname || !email || !password || !phone) {
+                console.log(firstname)
+                console.log('Please fill in all required fields')
                 return res.status(400).json({ message: 'Please fill in all required fields' });
             }
+            console.log(firstname)
+
             console.log(req.file)
             if (!req.file) {
                 console.log(3);
@@ -65,11 +67,12 @@ const sellerController = {
             const profileImageBlockBlobClient = containerClient.getBlockBlobClient(profileImageBlobName);
             const profileImageBuffer = Uint8Array.from(profileImage.buffer);
             await profileImageBlockBlobClient.uploadData(profileImageBuffer, profileImageBuffer.length);
+            const hashedPassword = await bcrypt.hash(password, 10);
             const user = new sellerSchema({
                 firstName: firstname,
                 lastName: lastname,
                 email: email,
-                password: password,
+                password: hashedPassword,
                 phone: phone,
                 profileImage: profileImageBlockBlobClient.url, // Store the image URL
 
@@ -369,8 +372,10 @@ const sellerController = {
     },
     async sellerInfoUpdate(req, res) {
         try {
+            console.log(req.body);
             const { userId, firstName, lastName, email, password, phone } = req.body;
-            
+            console.log(req.body)
+            console.log(userId)
             if (!userId) {
                 return res.status(400).json({ error: 'userId is missing' });
             }
@@ -387,10 +392,14 @@ const sellerController = {
             if (password) updateFields.password = password;
             if (phone) updateFields.phone = phone;
     
+        
             // Handle profile image separately if it's provided in the request
             if (req.file) {
                 const profileImage = req.file;
-                // Code for handling profile image upload and URL generation
+                const profileImageBlobName = `${uuidv4()}-profile-${Date.now()}.jpg`; // Generating a unique name based on timestamp
+                const profileImageBlockBlobClient = containerClient.getBlockBlobClient(profileImageBlobName);
+                const profileImageBuffer = Uint8Array.from(profileImage.buffer);
+                await profileImageBlockBlobClient.uploadData(profileImageBuffer, profileImageBuffer.length);
     
                 updateFields.profileImage = profileImageBlockBlobClient.url; // Store the image URL
             }
