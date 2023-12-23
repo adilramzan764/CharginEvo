@@ -130,8 +130,7 @@ const sellerController = {
             }
     
             const savedSpots = await chargingSpotSchema.insertMany(chargingSpots);
-    
-            // If you need to associate spots with a station, you would create the station here and associate the spots with it
+                // If you need to associate spots with a station, you would create the station here and associate the spots with it
             // const station = new Station({
             //     serviceHours,
             //     numberOfChargingSpots,
@@ -152,22 +151,22 @@ const sellerController = {
             res.status(500).json({ message: error.message });
         }
     },
-    async getSellerStationSpots(req, res) {
-        try {
-            const sellerid = req.params.sellerid;
-            const userExists = await sellerSchema.findById(sellerid);
-            if (!userExists) {
-                return res.status(404).json({ message: "Seller not found" });
-            }
-            const stationId = userExists.station;
-            const spots = await chargingSpotSchema.find({station : stationId});
+    // async getSellerStationSpots(req, res) {
+    //     try {
+    //         const sellerid = req.params.sellerid;
+    //         const userExists = await sellerSchema.findById(sellerid);
+    //         if (!userExists) {
+    //             return res.status(404).json({ message: "Seller not found" });
+    //         }
+    //         const stationId = userExists.station;
+    //         const spots = await chargingSpotSchema.find({station : stationId});
 
-            return res.status(200).json({spots});
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({ error: error.message });
-        }
-    },
+    //         return res.status(200).json({spots});
+    //     } catch (error) {
+    //         console.log(error);
+    //         return res.status(500).json({ error: error.message });
+    //     }
+    // },
     // async bookInStation(req, res) {
     //     try {
     //         const spotId = req.params.spotId;
@@ -440,7 +439,12 @@ const sellerController = {
             if (!userExists) {
                 return res.status(404).json({ message: "Seller not found" });
             }
-            return res.status(200).json({userExists});
+            // if (!userExists) {
+            //     return res.status(404).json({ message: "Seller not found" });
+            // }
+            const stationId = userExists.station;
+            const spots = await chargingSpotSchema.find({station : stationId});
+            return res.status(200).json({user :userExists, spots:spots });
         } catch (error) {
             console.log(error);
             return res.status(500).json({ error: error.message });

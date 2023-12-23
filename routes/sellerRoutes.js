@@ -26,9 +26,9 @@ router.post('/sellerchangePassword', Controllers.sellerchangePassword)
 // <<<<<<< main
 router.post('/sellerInfoUpdate',upload.single('profileImage') ,Controllers.sellerInfoUpdate)
 
-router.post('/sellerInfoUpdate', Controllers.sellerInfoUpdate)
+// router.post('/sellerInfoUpdate', Controllers.sellerInfoUpdate)
 //getSellerStationSpots
-router.get('/getSellerStationSpots/:sellerid', Controllers.getSellerStationSpots)
+// router.get('/getSellerStationSpots/:sellerid', Controllers.getSellerStationSpots)
 // //bookInStation
 // router.post('/bookInStation/:spotId', Controllers.bookInStation)
 //getOrdersById

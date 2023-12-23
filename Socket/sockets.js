@@ -21,16 +21,18 @@ module.exports = function attachSocket(httpServer) {
   
     socket.on('bookings', async (bookingsData) => {
       try {
-        const { spotId, startedAt, duration, units, station, chargingPrice, parkingPrice, buyer } = bookingsData;
-           if (!startedAt || !duration || !units || !station || !chargingPrice || !parkingPrice || !buyer || !spotId )  {
-            io.emit(station, { message: "Required Fields are not given" });
+        const { spotId, startedAt, duration, units,
+          stationId, chargingPrice, parkingPrice, buyerId,buyerName,buyerPhone ,chargerType,carName } = bookingsData;
+           if (!startedAt || !duration || !units || !stationId || 
+            !chargingPrice || !parkingPrice || !buyerId || !buyerName || !buyerPhone || !chargerType || !carName )  {
+            io.emit(stationId, { message: "Required Fields are not given" });
             return; // Halt execution if spot is not found
 
         }
         const spotExists = await chargingSpotSchema.findById(spotId);
-        console.log("here is station id:" , station);
+        console.log("here is station id:" , stationId);
         if (!spotExists) {
-          io.emit(station, { message: "Spot not found" });
+          io.emit(stationId, { message: "Spot not found" });
           return; // Halt execution if spot is not found
 
         }
@@ -48,30 +50,34 @@ module.exports = function attachSocket(httpServer) {
         });
 
         if (overlappingBooking) {
-          io.emit(station, { message: "Spot already booked for the specified time" });
+          io.emit(stationId, { message: "Spot already booked for the specified time" });
           return; // Halt execution if spot is not found
-
-
         }
         console.log("Not booked")
         const newBooking = new bookingInfoSchema({
             startedAt: startedAt,
             duration: duration,
             units: units,
-            buyer: buyer,
-            station: station,
+            buyerId: buyerId,
+            stationId: stationId,
             chargingPrice: chargingPrice,
-            parkingPrice: parkingPrice
+            parkingPrice: parkingPrice,
+            buyerName:buyerName,
+            buyerPhone:buyerPhone,
+            chargerType:chargerType,
+            carName:carName
+
+
         });
         await newBooking.save();
         spotExists.bookingInfo.push(newBooking);
         await spotExists.save();
-        io.emit(station, { message: "Booking information added successfully", spotExists });
+        io.emit(stationId, { message: "Booking information added successfully", spotExists });
         return; // Halt execution if spot is not found
 
     } catch (error) {
         console.log(error);
-        io.emit(station, {  error: error.message });
+        io.emit(stationId, {  error: error.message });
     }
     });   
 

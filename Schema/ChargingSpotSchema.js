@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const bookingInfoSchemaa = new Schema({
-    station: {
+    stationId: {
         type: String,
         required: false,
     },
@@ -12,7 +12,23 @@ const bookingInfoSchemaa = new Schema({
         default:"Pending",
         enum : ["Pending" , "Completed", "Cancelled"]
     },
-    buyer: {
+    buyerId: {
+        type: String,
+        required: false,
+    },
+    buyerName: {
+        type: String,
+        required: false,
+    },
+    buyerPhone: {
+        type: String,
+        required: false,
+    },
+    chargerType: {
+        type: String,
+        required: false,
+    },
+    carName: {
         type: String,
         required: false,
     },
