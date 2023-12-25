@@ -120,7 +120,7 @@ const buyerController = {
         try{
             const userId = req.params.userId;
             const orders = await bookingInfoSchema.find({
-                buyer: userId,
+                buyerId: userId,
 
             });
             if (!orders) {

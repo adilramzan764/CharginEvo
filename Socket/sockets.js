@@ -20,6 +20,7 @@ module.exports = function attachSocket(httpServer) {
     console.log('New client connected');
   
     socket.on('bookings', async (bookingsData) => {
+      var statiodID = "";
       try {
         const { spotId, startedAt, duration, units,
           stationId, chargingPrice, parkingPrice, buyerId,buyerName,buyerPhone ,chargerType,carName } = bookingsData;
@@ -29,6 +30,8 @@ module.exports = function attachSocket(httpServer) {
             return; // Halt execution if spot is not found
 
         }
+        statiodID= stationId;
+        console.log(statiodID)
         const spotExists = await chargingSpotSchema.findById(spotId);
         console.log("here is station id:" , stationId);
         if (!spotExists) {
@@ -36,23 +39,23 @@ module.exports = function attachSocket(httpServer) {
           return; // Halt execution if spot is not found
 
         }
-        const overlappingBooking = spotExists.bookingInfo.find(booking => {
-            const existingStart = new Date(booking.startedAt).getTime();
-            const newStart = new Date(startedAt).getTime();
-            const existingEnd = existingStart + (parseInt(booking.duration) * 60 * 60 * 1000);
-            const durationInHours = parseInt(duration);
-            const newEnd = newStart + (durationInHours * 60 * 60 * 1000); // Calculate the end time based on the provided duration in hours
-            return (
-                (newStart >= existingStart && newStart < existingEnd) ||
-                (newEnd > existingStart && newEnd <= existingEnd) ||
-                (newStart <= existingStart && newEnd >= existingEnd)
-            );
-        });
+        // const overlappingBooking = spotExists.bookingInfo.find(booking => {
+        //     const existingStart = new Date(booking.startedAt).getTime();
+        //     const newStart = new Date(startedAt).getTime();
+        //     const existingEnd = existingStart + (parseInt(booking.duration) * 60 * 60 * 1000);
+        //     const durationInHours = parseInt(duration);
+        //     const newEnd = newStart + (durationInHours * 60 * 60 * 1000); // Calculate the end time based on the provided duration in hours
+        //     return (
+        //         (newStart >= existingStart && newStart < existingEnd) ||
+        //         (newEnd > existingStart && newEnd <= existingEnd) ||
+        //         (newStart <= existingStart && newEnd >= existingEnd)
+        //     );
+        // });
 
-        if (overlappingBooking) {
-          io.emit(stationId, { message: "Spot already booked for the specified time" });
-          return; // Halt execution if spot is not found
-        }
+        // if (overlappingBooking) {
+        //   io.emit(stationId, { message: "Spot already booked for the specified time" });
+        //   return; // Halt execution if spot is not found
+        // }
         console.log("Not booked")
         const newBooking = new bookingInfoSchema({
             startedAt: startedAt,
@@ -72,12 +75,12 @@ module.exports = function attachSocket(httpServer) {
         await newBooking.save();
         spotExists.bookingInfo.push(newBooking);
         await spotExists.save();
-        io.emit(stationId, { message: "Booking information added successfully", spotExists });
+        io.emit(stationId, { message: "Booking information added successfully", newBooking });
         return; // Halt execution if spot is not found
 
     } catch (error) {
         console.log(error);
-        io.emit(stationId, {  error: error.message });
+        io.emit(statiodID, {  error: error.message });
     }
     });   
 

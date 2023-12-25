@@ -288,13 +288,17 @@ const sellerController = {
     async getOrdersById(req, res) {
         try{
             const stationId = req.params.stationId;
+
             const orders = await bookingInfoSchema.find({
-                station: stationId,
+                stationId: stationId,
 
             });
+             console.log(stationId)
             if (!orders) {
+                console.log("no orders")
                 return res.status(404).json({ message: "orders not found" });
             }
+            console.log("Here orders")
 
             return res.status(200).json({ orders });
 
