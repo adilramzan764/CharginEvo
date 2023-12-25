@@ -2,15 +2,14 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const carSchema = new Schema({   
-  
-     brand: {
+    brand: {
         required: true,
         type: String
     },
     model : {
         required: true,
         type: String,
-        unique : true
+        // unique : true
     },
     trim: {
         required: true,
@@ -24,4 +23,4 @@ const carSchema = new Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('Car', carSchema); 
+module.exports = mongoose.model('Car', carSchema);

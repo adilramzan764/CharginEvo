@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const carSchema = require('../Schema/VehicleSchema'); // Import the car schema
 
 const buyerSchema = new Schema({   
-     firstName: {
+    firstName: {
         required: true,
         type: String
     },
@@ -22,18 +23,19 @@ const buyerSchema = new Schema({
         required: true,
         type: String
     },
-
-    Cars: {
+    Cars:{
         type: Schema.Types.ObjectId,
-        ref: 'Car'
-        
+        ref: 'Car' 
     },
+    // car: {
+    //     required: false,
+    //     type: Object
+    // },
     token: {
         type: String,
-      },
-
+    },
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model('Buyer', buyerSchema); 
+module.exports = mongoose.model('Buyer', buyerSchema);

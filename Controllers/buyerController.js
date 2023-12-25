@@ -3,6 +3,7 @@ const vehicleSchema = require('../Schema/VehicleSchema');
 const stationSchema = require('../Schema/stationSchema');
 const   { bookingInfoSchema } = require('../Schema/ChargingSpotSchema')
 const bcrypt = require('bcrypt');
+const VehicleSchema = require('../Schema/VehicleSchema');
 
 const buyerController = {
     async buyerlogin(req, res) {
@@ -73,19 +74,33 @@ const buyerController = {
             res.status(500).json({ message: error.message });
         }
     },
-    async getBuyerInfo(req, res) {
+    async  getBuyerInfo(req, res) {
         try {
             const buyerId = req.params.buyerId;
-            const userExists = await buyerSchema.findById(buyerId);
+            const userExists = await buyerSchema.findById(buyerId).populate('Cars'); // Ensure Cars field is populated
             if (!userExists) {
                 return res.status(404).json({ message: "Buyer not found" });
             }
-            return res.status(200).json({userExists});
+    
+            // console.log(userExists.Cars); // Ensure Cars field holds the expected data
+    
+            // const cardata = await VehicleSchema.findById(userExists.Cars); // Assuming Car is the model name
+            // console.log(cardata);
+    
+            // // Assign the fetched car data to the user's car field
+            // // userExists.car = cardata;
+            // await userExists.save(); // Save the changes
+    
+            return res.status(200).json({ userExists });
         } catch (error) {
             console.log(error);
             return res.status(500).json({ error: error.message });
         }
-    },
+    }
+    ,
+  
+    
+    
     async buyerInfoUpdate(req, res) {
         try {
             const { userId, firstName, lastName, email, password, phone } = req.body;
