@@ -1,9 +1,15 @@
 const buyerSchema = require('../Schema/BuyerSchema');
 const vehicleSchema = require('../Schema/VehicleSchema');
 const stationSchema = require('../Schema/stationSchema');
-const   { bookingInfoSchema } = require('../Schema/ChargingSpotSchema')
+const { BlobServiceClient } = require('@azure/storage-blob');
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
+const   { bookingInfoSchema, chargingSpotSchema } = require('../Schema/ChargingSpotSchema')
 const VehicleSchema = require('../Schema/VehicleSchema');
+const connectionString = 'DefaultEndpointsProtocol=https;AccountName=chargingdata;AccountKey=bMDS4ZcMoJNwIFxBvrA2K8U3PwUghSmNKkdSTL+9p55l7YWBmjZc5xKpUt5Y1RwiqiTGjqPMxBPG+AStTqILHA==;EndpointSuffix=core.windows.net'; // Replace with your actual connection string
+const containerName = 'buyerdata'; // Replace with your desired container name
+const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+const containerClient = blobServiceClient.getContainerClient(containerName);
 
 const buyerController = {
     async buyerlogin(req, res) {
@@ -81,6 +87,7 @@ const buyerController = {
             if (!userExists) {
                 return res.status(404).json({ message: "Buyer not found" });
             }
+
     
             // console.log(userExists.Cars); // Ensure Cars field holds the expected data
     
@@ -97,9 +104,7 @@ const buyerController = {
             return res.status(500).json({ error: error.message });
         }
     }
-    ,
-  
-    
+    ,    
     
     async buyerInfoUpdate(req, res) {
         try {
@@ -109,6 +114,9 @@ const buyerController = {
                 return res.status(400).json({ error: 'userId is missing' });
             }
     
+            console.log("Hello")
+            console.log(userId)
+
             const user = await buyerSchema.findById(userId);
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
@@ -120,8 +128,16 @@ const buyerController = {
             if (email) updateFields.email = email;
             if (password) updateFields.password = password;
             if (phone) updateFields.phone = phone;    
-     
-    
+                    // Handle profile image separately if it's provided in the request
+            if (req.file) {
+                const profileImage = req.file;
+                        const profileImageBlobName = `${uuidv4()}-profile-${Date.now()}.jpg`; // Generating a unique name based on timestamp
+                        const profileImageBlockBlobClient = containerClient.getBlockBlobClient(profileImageBlobName);
+                        const profileImageBuffer = Uint8Array.from(profileImage.buffer);
+                        await profileImageBlockBlobClient.uploadData(profileImageBuffer, profileImageBuffer.length);
+            
+                        updateFields.profileImage = profileImageBlockBlobClient.url; // Store the image URL
+                    }
             await buyerSchema.findByIdAndUpdate(userId, { $set: updateFields });
     
             res.status(200).json({ message: 'User Info Updated successfully' });
@@ -165,8 +181,8 @@ const buyerController = {
           }
   
           // Hash the new password before saving it
-          const hashedPassword = await bcrypt.hash(newPassword, 10);
-          user.password = hashedPassword;
+        //   const hashedPassword = await bcrypt.hash(newPassword, 10);
+          user.password = newPassword;
           await user.save();
   
           return res.status(200).json({ message: 'Password changed successfully' });
@@ -219,16 +235,47 @@ const buyerController = {
           return res.status(500).json({ error: error.message });
       }
   },
-  async getAllStations(req, res) {
+  async getstationbychargertype(req, res) {
     try {
-        const sations = await stationSchema.find();
-        return res.status(200).json({Stations : sations});
+        const spotName = req.params.spotName
+        // const sations = await stationSchema.find();
+        console.log(spotName)
+        const stations = await chargingSpotSchema.find({spotName:spotName });
+        if (stations.length === 0) {
+            return res.status(404).json({ message: "No stations found for the given spot name." });
+        }
+        return res.status(200).json({Stations : stations});
     } catch (error) {
         console.log(error);
         return res.status(500).json({ error: error.message });
     }
 },
+async getstationbyId(req, res) {
+    try {
+        const stationId = req.params.stationId; 
+        const stations = await stationSchema.find({_id :stationId });
+        console.log(stationId)
+        const spots = await chargingSpotSchema.find({station:stationId });
+        if (stations.length === 0) {
+            return res.status(404).json({ message: "No stations found." });
+        }
+        return res.status(200).json({Stations : stations,spots:spots});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: error.message });
+    }
+},
+// chargingSpotSchema
 
+async getAllchargingScema(req, res) {
+    try {
+        const sations = await chargingSpotSchema.find();
+        return res.status(200).json({spots : sations});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: error.message });
+    }
+}
 
     
     

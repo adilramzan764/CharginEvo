@@ -27,6 +27,10 @@ const buyerSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Car' 
     },
+    profileImage: {
+        required: false,
+        type: String
+    },
     // car: {
     //     required: false,
     //     type: Object

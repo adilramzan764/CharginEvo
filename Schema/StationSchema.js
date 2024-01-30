@@ -10,14 +10,14 @@ const stationSchema = new Schema({
         required: true,
         type: String
     },
-    namesOfChargingSpots: {
-     required: true,
-     type: [String]
-   }, 
-   chargingSpots: [{
-    type: Schema.Types.ObjectId,
-    ref: 'ChargingSpot',
-  }],
+  //   namesOfChargingSpots: {
+  //    required: true,
+  //    type: [String]
+  //  }, 
+  //  chargingSpots: [{
+  //   type: Schema.Types.ObjectId,
+  //   ref: 'ChargingSpot',
+  // }],
     perHourPrice: {
      required: true,
      type: String,
@@ -30,6 +30,10 @@ const stationSchema = new Schema({
      required: true,
      type: [String]
    }, 
+   reviews: {
+    required: false,
+    type: [Schema.Types.ObjectId,]
+  }, 
    location:{
     required: false,
     type: String
@@ -46,6 +50,5 @@ const stationSchema = new Schema({
 
 
 
- module.exports = mongoose.model('Sation', stationSchema); // Use 'Sation' instead of 'sellerSchema'
-
+ module.exports = mongoose.model('Sation', stationSchema); 
 

@@ -74,6 +74,7 @@ module.exports = function attachSocket(httpServer) {
         });
         await newBooking.save();
         spotExists.bookingInfo.push(newBooking);
+        spotExists.status = "NotAvailable";
         await spotExists.save();
         io.emit(stationId, { message: "Booking information added successfully", newBooking });
         return; // Halt execution if spot is not found

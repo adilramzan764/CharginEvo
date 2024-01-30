@@ -274,6 +274,7 @@ const sellerController = {
                 chargingPrice: chargingPrice,
                 parkingPrice: parkingPrice
             });
+            
             await newBooking.save();
             spotExists.bookingInfo.push(newBooking);
             await spotExists.save();
