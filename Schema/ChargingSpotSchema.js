@@ -61,6 +61,11 @@ const chargingSpotSchemaa = new Schema({
         ref: 'Station',
         required: true,
     },
+    location: {
+        type: String,
+        required: false,
+    },
+
     spotNumber: {
         type: String,
         required: false,

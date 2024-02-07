@@ -1,5 +1,6 @@
 const buyerSchema = require('../Schema/BuyerSchema');
 const vehicleSchema = require('../Schema/VehicleSchema');
+const reviewSchema = require('../Schema/ReviewSchema');
 const stationSchema = require('../Schema/stationSchema');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const bcrypt = require('bcrypt');
@@ -235,6 +236,70 @@ const buyerController = {
           return res.status(500).json({ error: error.message });
       }
   },
+
+  async buyergiveReview(req, res) {
+    try {
+        const {
+            stationId,
+            buyerImage,
+            buyerName,
+            reviewRating,
+            reviewBody,
+            buyerId
+        } = req.body;
+
+        if(!buyerId){
+            return res.status(400).json({ error: 'User Id is not given' });
+
+        }
+        const stationExists = await stationSchema.findById( stationId );
+        if (!stationExists) {
+            return res.status(404).json({ message: "Station not found" });
+        }
+         
+        if (!stationId || !buyerImage,!buyerName,!reviewRating,buyerId,
+            !reviewBody) {
+            return res.status(400).json({ error: 'Required Fields are not given' });
+        }
+
+      
+        // Create the new clinic
+        const review = await reviewSchema.create({
+            stationId,
+            buyerImage,
+            buyerName,
+            reviewRating,
+            reviewBody,
+            buyerId
+        });
+
+        // Add the newly created clinic to the user's clinics array
+        stationExists.reviews.push(review._id); // Push the new review ID into the existing array
+        await stationExists.save();
+
+        return res.status(200).json({message : "Review Added Successfuly" ,review:review});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: error.message });
+    }
+},
+
+async getreviewsbystationId(req, res) {
+    try {
+        const stationId = req.params.stationId
+        // const sations = await stationSchema.find();
+        console.log(stationId)
+        const review = await reviewSchema.find({stationId:stationId });
+        if (review.length === 0) {
+            return res.status(404).json({ message: "No stations found for the given spot name." });
+        }
+        return res.status(200).json({review : review});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: error.message });
+    }
+},
+
   async getstationbychargertype(req, res) {
     try {
         const spotName = req.params.spotName

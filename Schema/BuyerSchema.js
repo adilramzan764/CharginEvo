@@ -31,6 +31,11 @@ const buyerSchema = new Schema({
         required: false,
         type: String
     },
+    
+    discription: {
+        required: true,
+        type: String
+    },
     // car: {
     //     required: false,
     //     type: Object

@@ -32,6 +32,11 @@ router.patch('/buyerInfoUpdate',upload.single('profileImage') ,Controllers.buyer
 router.get('/getBuyerOrdersById/:userId', Controllers.getBuyerOrdersById)
 //getAllchargingScema
 router.get('/getAllchargingScema', Controllers.getAllchargingScema)
+//buyergiveReview
+router.post('/buyergiveReview' , Controllers.buyergiveReview)
+//getreviewsbystationId
+router.get('/getreviewsbystationId/:stationId', Controllers.getreviewsbystationId)
+
 
 
 

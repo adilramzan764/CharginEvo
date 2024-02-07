@@ -10,10 +10,10 @@ const stationSchema = new Schema({
         required: true,
         type: String
     },
-  //   namesOfChargingSpots: {
-  //    required: true,
-  //    type: [String]
-  //  }, 
+    description: {
+     required: false,
+     type: String,
+   }, 
   //  chargingSpots: [{
   //   type: Schema.Types.ObjectId,
   //   ref: 'ChargingSpot',
@@ -30,6 +30,10 @@ const stationSchema = new Schema({
      required: true,
      type: [String]
    }, 
+   stationImages: {
+    required: true,
+    type: [String]
+  }, 
    reviews: {
     required: false,
     type: [Schema.Types.ObjectId,]

@@ -15,11 +15,12 @@ router.post('/sellerlogin',Controllers.sellerlogin)
 //sellerSignUpPersonal
 router.post('/sellerSignUpPersonal',upload.single('profileImage'), Controllers.sellerSignUpPersonal)
 //sellerSignUpStation
-router.post('/sellerSignUpStation', Controllers.sellerSignUpStation)
+router.post('/sellerSignUpStation', upload.array('stationImages'), Controllers.sellerSignUpStation);
+
 //getSellerInfo
 router.get('/getSellerInfo/:sellerid', Controllers.getSellerInfo)
 //addLocationToStation
-router.post('/addLocationToStation', Controllers.addLocationToStation)
+// router.post('/addLocationToStation', Controllers.addLocationToStation)
 //sellerchangePassword
 router.post('/sellerchangePassword', Controllers.sellerchangePassword)
 //sellerInfoUpdate

@@ -5,8 +5,11 @@ const StationSchema = require('../Schema/stationSchema');
 const   { bookingInfoSchema, chargingSpotSchema } = require('../Schema/ChargingSpotSchema')
 const connectionString = 'DefaultEndpointsProtocol=https;AccountName=chargingdata;AccountKey=bMDS4ZcMoJNwIFxBvrA2K8U3PwUghSmNKkdSTL+9p55l7YWBmjZc5xKpUt5Y1RwiqiTGjqPMxBPG+AStTqILHA==;EndpointSuffix=core.windows.net'; // Replace with your actual connection string
 const containerName = 'sellerdata'; // Replace with your desired container name
+const stationImagesContainer = 'stationimage'; // Replace with your desired container name
 const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerClient = blobServiceClient.getContainerClient(containerName);
+const containerstationImages = blobServiceClient.getContainerClient(stationImagesContainer);
+
 const bcrypt = require('bcrypt');
 
 const sellerController = {
@@ -93,24 +96,74 @@ const sellerController = {
     },
     async sellerSignUpStation(req, res) {
         try {
-            const { userId, serviceHours, numberOfChargingSpots, perHourPrice, ParkingPrice, amenities, namesOfChargingSpots } = req.body;
+            const { userId, serviceHours, numberOfChargingSpots, perHourPrice, ParkingPrice, amenities, namesOfChargingSpots,location,description } = req.body;
     
             if (!userId || !serviceHours || !numberOfChargingSpots || !perHourPrice || !amenities || !namesOfChargingSpots) {
                 return res.status(400).json({ message: 'Please fill in all required fields' });
             }
     
             const userExists = await sellerSchema.findById(userId);
+            console.log(userId)
             if (!userExists) {
                 return res.status(404).json({ message: "User not found" });
             }
+
+            const stationsImages = req.files; // Assuming req.files is an array of images
+            console.log(stationsImages)
+
+            if (!stationsImages || stationsImages.length === 0) {
+                return res.status(400).json({ message: "No Images added" });
+            }
+            // const profileImage = req.file;
+            // const profileImageBlobName = `${uuidv4()}-profile-${Date.now()}.jpg`; // Generating a unique name based on timestamp
+            // const profileImageBlockBlobClient = containerClient.getBlockBlobClient(profileImageBlobName);
+            // const profileImageBuffer = Uint8Array.from(profileImage.buffer);
+            // await profileImageBlockBlobClient.uploadData(profileImageBuffer, profileImageBuffer.length);
+            const stationImageURLs = [];
+            for (const stationImage of stationsImages) {
+                try {
+                    // Check if stationImage has a buffer property
+                    if (!stationImage.buffer) {
+                        throw new Error("Uploaded file does not contain buffer data");
+                    }
+            
+                    const stationImageBlobName = `${uuidv4().replace(/-/g, '')}-profile-${Date.now()}.jpg`;
+                    const stationImageBlockBlobClient = containerstationImages.getBlockBlobClient(stationImageBlobName);
+                    const stationImageBuffer = Uint8Array.from(stationImage.buffer);
+                    await stationImageBlockBlobClient.uploadData(stationImageBuffer, stationImageBuffer.length);
+                    
+                    // Get the URL for the uploaded blob
+                    const imageURL = stationImageBlockBlobClient.url;
+                    
+                    if (imageURL) {
+                        stationImageURLs.push(imageURL);
+                        console.log(imageURL);
+                        console.log(stationImageURLs);
+                    } else {
+                        throw new Error("Failed to get URL for uploaded image");
+                    }
+                } catch (error) {
+                    console.error("Error uploading image:", error);
+                    // Handle the error (e.g., log it, return an error response)
+                }
+            }
+            
+            
+            
+
+            
             const station = new StationSchema({
-                serviceHours,
-                numberOfChargingSpots,
-                namesOfChargingSpots,
-                perHourPrice,
-                ParkingPrice,
-                amenities,
+                serviceHours: serviceHours,
+                numberOfChargingSpots:numberOfChargingSpots,
+                namesOfChargingSpots:namesOfChargingSpots,
+                perHourPrice:perHourPrice,
+                ParkingPrice:ParkingPrice,
+                amenities:amenities,
+                location:location,
+                stationImages: stationImageURLs,
+                description:description
             });
+            
             const savedStation = await station.save();
     
             // Associate the station with the user and save the user
@@ -124,7 +177,8 @@ const sellerController = {
                 const spot = new chargingSpotSchema({
                     spotName: namesOfChargingSpots[i],
                     spotNumber: i + 1,
-                    station: savedStation._id
+                    station: savedStation._id,
+                    location:location
                 });
                 chargingSpots.push(spot);
             }
@@ -310,10 +364,7 @@ const sellerController = {
             return res.status(500).json({ error: error.message });
         }
     },
-    
-
-
-    
+        
     // async bookInStation(req, res) {
     //     try {
     //         const spotId = req.params.spotId;
@@ -418,25 +469,25 @@ const sellerController = {
         }
     },
     
-    async addLocationToStation(req, res) {
-        console.log("station");
-        try {
-            const { stationId, location,  } = req.body;
+    // async addLocationToStation(req, res) {
+    //     console.log("station");
+    //     try {
+    //         const { stationId, location,  } = req.body;
     
-            // Check if any required fields are empty
-            if (!stationId || !location) {
-                return res.status(400).json({ message: 'Please fill in all required fields' });
-            } 
-            const station =  await StationSchema.findById(stationId);
+    //         // Check if any required fields are empty
+    //         if (!stationId || !location) {
+    //             return res.status(400).json({ message: 'Please fill in all required fields' });
+    //         } 
+    //         const station =  await StationSchema.findById(stationId);
 
     
-            station.location = location;
-           await station.save(); // Save the station
-            res.status(200).json({ message: 'location added successfully'});
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
-    },
+    //         station.location = location;
+    //        await station.save(); // Save the station
+    //         res.status(200).json({ message: 'location added successfully'});
+    //     } catch (error) {
+    //         res.status(500).json({ message: error.message });
+    //     }
+    // },
     async getSellerInfo(req, res) {
         try {
             const sellerid = req.params.sellerid;
